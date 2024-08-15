@@ -1,0 +1,87 @@
+package lexer
+
+import net.quickwrite.lexer.JSONLexeme
+import net.quickwrite.lexer.JSONLexemeType
+import net.quickwrite.lexer.LexerException
+import net.quickwrite.lexer.StringJSONLexer
+import org.junit.jupiter.api.Test
+
+import org.junit.jupiter.api.Assertions.*
+
+class StringJSONLexerTest {
+    @Test
+    fun `empty String test`() {
+        val emptyStrings = mutableListOf("", " ", "\t", "\n", "\r\n")
+
+        emptyStrings.forEach {
+            assertEquals(StringJSONLexer(it).getNext(), JSONLexeme(JSONLexemeType.EOF))
+        }
+    }
+
+    @Test
+    fun `arbitrary tokens test`() {
+        val input = "[]{}:,"
+        val expected = mutableListOf(
+            JSONLexemeType.SQUARE_OPEN,
+            JSONLexemeType.SQUARE_CLOSE,
+            JSONLexemeType.CURLY_OPEN,
+            JSONLexemeType.CURLY_CLOSE,
+            JSONLexemeType.COLON,
+            JSONLexemeType.COMMA,
+            JSONLexemeType.EOF
+        )
+        val lexer = StringJSONLexer(input)
+        val output: MutableList<JSONLexemeType> = mutableListOf()
+
+        var iterator = 0
+        while (true) {
+            val element = lexer.getNext()
+            output.add(element.type)
+            if (element.type == JSONLexemeType.EOF) {
+                break
+            }
+            iterator++
+
+            if (iterator >= 100) break
+        }
+
+        assertEquals(expected, output)
+    }
+
+    @Test
+    fun `numbers test`() {
+        val inputs = arrayOf("42", "1.5", "0.512", "1e5", "0e5", "1E5", "123456789")
+
+        inputs.forEach {
+            assertEquals(StringJSONLexer(it).getNext(), JSONLexeme(JSONLexemeType.NUMBER, it))
+
+            // Add padding
+            assertEquals(StringJSONLexer(" \t$it").getNext(), JSONLexeme(JSONLexemeType.NUMBER, it))
+            assertEquals(StringJSONLexer(" \t$it\t ").getNext(), JSONLexeme(JSONLexemeType.NUMBER, it))
+        }
+    }
+
+    @Test
+    fun `number exception test`() {
+        val inputs = arrayOf("1.", "001", "0e", "1e+")
+
+        inputs.forEach {
+            org.junit.jupiter.api.assertThrows<LexerException> {
+                StringJSONLexer(it).getNext()
+            }
+        }
+    }
+
+    @Test
+    fun `simple String test()`() {
+        val inputs = arrayOf("\"\"", "\"Hello World\"")
+
+        inputs.forEach {
+            assertEquals(StringJSONLexer(it).getNext(), JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)))
+
+            // Add padding
+            assertEquals(StringJSONLexer(" \t$it").getNext(), JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)))
+            assertEquals(StringJSONLexer(" \t$it\t ").getNext(), JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)))
+        }
+    }
+}
