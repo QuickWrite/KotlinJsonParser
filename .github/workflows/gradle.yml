@@ -13,6 +13,10 @@ jobs:
         # uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1
         uses: gradle/gradle-build-action@v3.5.0
         with:
+          # Gradle version to use. If specified, this Gradle version will be downloaded, added to the PATH and used for invoking Gradle.
+          # If not provided, it is assumed that the project uses the Gradle Wrapper.
+          gradle-version: '8.8'
+        
           # dependency-graph: # optional, default is disabled
           # When 'false' a failure to generate or submit a dependency graph will fail the Step or Job. When 'true' a warning will be emitted but no failure will result.
           # dependency-graph-continue-on-failure: # optional, default is true
