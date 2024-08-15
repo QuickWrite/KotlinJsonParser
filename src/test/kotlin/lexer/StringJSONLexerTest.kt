@@ -53,11 +53,11 @@ class StringJSONLexerTest {
         val inputs = arrayOf("42", "1.5", "0.512", "1e5", "0e5", "1E5", "123456789")
 
         inputs.forEach {
-            assertEquals(StringJSONLexer(it).getNext(), JSONLexeme(JSONLexemeType.NUMBER, it))
+            assertEquals(JSONLexeme(JSONLexemeType.NUMBER, it), StringJSONLexer(it).getNext())
 
             // Add padding
-            assertEquals(StringJSONLexer(" \t$it").getNext(), JSONLexeme(JSONLexemeType.NUMBER, it))
-            assertEquals(StringJSONLexer(" \t$it\t ").getNext(), JSONLexeme(JSONLexemeType.NUMBER, it))
+            assertEquals(JSONLexeme(JSONLexemeType.NUMBER, it), StringJSONLexer(" \t$it").getNext())
+            assertEquals(JSONLexeme(JSONLexemeType.NUMBER, it), StringJSONLexer(" \t$it\t ").getNext())
         }
     }
 
@@ -77,11 +77,21 @@ class StringJSONLexerTest {
         val inputs = arrayOf("\"\"", "\"Hello World\"")
 
         inputs.forEach {
-            assertEquals(StringJSONLexer(it).getNext(), JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)))
+            assertEquals(JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)), StringJSONLexer(it).getNext())
 
             // Add padding
-            assertEquals(StringJSONLexer(" \t$it").getNext(), JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)))
-            assertEquals(StringJSONLexer(" \t$it\t ").getNext(), JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)))
+            assertEquals(JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)), StringJSONLexer(" \t$it").getNext())
+            assertEquals(JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)), StringJSONLexer(" \t$it\t ").getNext())
         }
+    }
+
+    @Test
+    fun `complex String test()`() {
+        val input = "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t \\u000A\""
+
+        assertEquals(
+            JSONLexeme(JSONLexemeType.STRING, "\" \\ / \b \u000C \n \r \t \u000A"),
+            StringJSONLexer(input).getNext()
+        )
     }
 }

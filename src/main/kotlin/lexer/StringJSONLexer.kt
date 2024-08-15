@@ -33,7 +33,69 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
     }
 
     private fun parseString(): JSONLexeme {
-        TODO()
+        position++
+
+        val builder = StringBuilder()
+
+        while (content.getChar(position) != '"' && content.getChar(position) != 0.toChar()) {
+            if (content[position] == '\\') {
+                position++
+                builder.append(when(content.getChar(position)) {
+                    '"' -> '"'
+                    '\\' -> '\\'
+                    '/' -> '/'
+                    'b' -> '\b'
+                    'f' -> '\u000C'
+                    'n' -> '\n'
+                    'r' -> '\r'
+                    't' -> '\t'
+                    'u' -> parseUDigitNumber()
+                    else -> TODO()
+                })
+                position++
+                continue
+            }
+
+            builder.append(content[position])
+            position++
+        }
+
+        if (position >= content.length) {
+            throw LexerException("String wasn't terminated") // TODO: Better error handling
+        }
+
+        return JSONLexeme(JSONLexemeType.STRING, builder.toString())
+    }
+
+    private fun parseUDigitNumber(): Char {
+        var number = 0
+
+        for (i in 3 downTo 0) {
+            position++
+            val char = content.getChar(position)
+
+            if (char in '0' .. '9') {
+                number += (char - 48).code shl (i * 4)
+
+                continue
+            }
+
+            if (char in 'A' .. 'F') {
+                number += (char - 65 + 10).code shl (i * 4)
+
+                continue
+            }
+
+            if (char in 'a' .. 'f') {
+                number += (char - 97 + 10).code shl (i * 4)
+
+                continue
+            }
+
+            throw LexerException("An invalid hex digit has been provided. Expected 0-9A-Fa-f, but got '$char'") // TODO: Better error handling
+        }
+
+        return number.toChar()
     }
 
     private fun parseNumber(negative: Boolean): JSONLexeme {
