@@ -11,7 +11,7 @@ jobs:
       - name: Gradle Build Action
         # You may pin to the exact commit or the version.
         # uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1
-        uses: gradle/gradle-build-action@v3.5.0
+        uses: gradle/actions/setup-gradle@v4
         with:
           # Gradle version to use. If specified, this Gradle version will be downloaded, added to the PATH and used for invoking Gradle.
           # If not provided, it is assumed that the project uses the Gradle Wrapper.
@@ -29,13 +29,10 @@ jobs:
           
           #  When 'false', no Job Summary will be generated for the Job.
           generate-job-summary: true # optional, default is true
-          
-          # Gradle command line arguments (supports multi-line input)
-          arguments: --scan # optional
-          # Path to the root directory of the build. Default is the root of the GitHub workspace.
-          # build-root-directory: # optional
-          
-          # When 'true', the action will not attempt to restore the Gradle User Home entries from other Jobs.
-          # gradle-home-cache-strict-match: # optional
+      - name: Assemble the project
+        run: ./gradlew assemble
+
+      - name: Run the tests
+        run: ./gradlew test
           
       
