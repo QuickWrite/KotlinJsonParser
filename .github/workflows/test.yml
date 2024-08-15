@@ -12,5 +12,5 @@ jobs:
       - name: Download tree
         run: sudo apt install tree
       - name: List everything
-        run: tree /
+        run: tree /home/runner/work/KotlinJsonParser/KotlinJsonParse
         
