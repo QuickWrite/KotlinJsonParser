@@ -77,7 +77,9 @@ class StringJSONLexerTest {
         val inputs = arrayOf("\"\"", "\"Hello World\"")
 
         inputs.forEach {
-            assertEquals(JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)), StringJSONLexer(it).getNext())
+            val lexer = StringJSONLexer(it)
+            assertEquals(JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)), lexer.getNext())
+            assertEquals(JSONLexeme(JSONLexemeType.EOF), lexer.getNext())
 
             // Add padding
             assertEquals(JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)), StringJSONLexer(" \t$it").getNext())

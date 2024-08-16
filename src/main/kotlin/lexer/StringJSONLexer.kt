@@ -77,6 +77,8 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             throw LexerException("String wasn't terminated") // TODO: Better error handling
         }
 
+        position++
+
         return JSONLexeme(JSONLexemeType.STRING, builder.toString())
     }
 
