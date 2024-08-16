@@ -23,8 +23,21 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                 parseNumber(true)
             }
             '"' -> parseString()
-            else -> TODO("Not implemented")
+            't' -> parseLiteral("true", JSONLexemeType.TRUE)
+            'f' -> parseLiteral("false", JSONLexemeType.FALSE)
+            'n' -> parseLiteral("null", JSONLexemeType.NULL)
+            else -> throw LexerException("Invalid token")
         }
+    }
+
+    private fun parseLiteral(input: String, type: JSONLexemeType): JSONLexeme {
+        for (i in input) {
+            if(content.getChar(position) != i) {
+                throw LexerException("Expected '$input', but got malformed input")
+            }
+            position++
+        }
+        return JSONLexeme(type)
     }
 
     private fun charLexeme(type: JSONLexemeType): JSONLexeme {
@@ -40,7 +53,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
         while (content.getChar(position) != '"' && content.getChar(position) != 0.toChar()) {
             if (content[position] == '\\') {
                 position++
-                builder.append(when(content.getChar(position)) {
+                builder.append(when(val char = content.getChar(position)) {
                     '"' -> '"'
                     '\\' -> '\\'
                     '/' -> '/'
@@ -50,7 +63,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                     'r' -> '\r'
                     't' -> '\t'
                     'u' -> parseUDigitNumber()
-                    else -> TODO()
+                    else -> throw LexerException("The character $char cannot be escaped") // TODO: Better error handling
                 })
                 position++
                 continue

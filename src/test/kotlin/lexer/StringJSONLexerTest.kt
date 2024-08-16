@@ -73,7 +73,7 @@ class StringJSONLexerTest {
     }
 
     @Test
-    fun `simple String test()`() {
+    fun `simple String test`() {
         val inputs = arrayOf("\"\"", "\"Hello World\"")
 
         inputs.forEach {
@@ -86,11 +86,41 @@ class StringJSONLexerTest {
     }
 
     @Test
-    fun `complex String test()`() {
+    fun `complex String test`() {
         val input = "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t \\u000A\""
 
         assertEquals(
             JSONLexeme(JSONLexemeType.STRING, "\" \\ / \b \u000C \n \r \t \u000A"),
+            StringJSONLexer(input).getNext()
+        )
+    }
+
+    @Test
+    fun `true literal test`() {
+        val input = "true"
+
+        assertEquals(
+            JSONLexeme(JSONLexemeType.TRUE),
+            StringJSONLexer(input).getNext()
+        )
+    }
+
+    @Test
+    fun `false literal test`() {
+        val input = "false"
+
+        assertEquals(
+            JSONLexeme(JSONLexemeType.FALSE),
+            StringJSONLexer(input).getNext()
+        )
+    }
+
+    @Test
+    fun `null literal test`() {
+        val input = "null"
+
+        assertEquals(
+            JSONLexeme(JSONLexemeType.NULL),
             StringJSONLexer(input).getNext()
         )
     }
