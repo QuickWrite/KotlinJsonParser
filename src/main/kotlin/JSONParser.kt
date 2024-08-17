@@ -19,7 +19,7 @@ fun jsonParse(input: String): Any? {
 
     var token: JSONLexeme
 
-    var stack = Stack<Any?>()
+    val stack = Stack<Any?>()
 
     while (true) {
         token = lexer.getNext()
@@ -64,17 +64,20 @@ fun jsonParse(input: String): Any? {
                     if (stack.peek() is String) {
                         val name = stack.pop() as String
 
+                        @Suppress("UNCHECKED_CAST")
                         (stack.peek() as HashMap<String, Any?>)[name] = jsonObject
                         continue
                     }
 
                     // Should now be an array
+                    @Suppress("UNCHECKED_CAST")
                     (stack.peek() as ArrayList<Any?>).add(jsonObject)
 
                     state = State.ARRAY
                     continue
                 }
 
+                @Suppress("UNCHECKED_CAST")
                 val map = stack.peek() as HashMap<String, Any?>
 
                 if(map.isNotEmpty()) {
@@ -94,7 +97,7 @@ fun jsonParse(input: String): Any? {
                 token = lexer.getNext()
 
                 if (token.type != COLON) {
-                    throw JSONParserException("Expeced ':' (COLON), but got ${token.type}") // TODO: Better error reporting
+                    throw JSONParserException("Expected ':' (COLON), but got ${token.type}") // TODO: Better error reporting
                 }
 
                 token = lexer.getNext()
@@ -134,6 +137,7 @@ fun jsonParse(input: String): Any? {
                     if (stack.peek() is String) {
                         val name = stack.pop() as String
 
+                        @Suppress("UNCHECKED_CAST")
                         (stack.peek() as HashMap<String, Any?>)[name] = array
 
                         state = State.OBJECT
@@ -141,10 +145,12 @@ fun jsonParse(input: String): Any? {
                     }
 
                     // Should now be an array
+                    @Suppress("UNCHECKED_CAST")
                     (stack.peek() as ArrayList<Any?>).add(array)
                     continue
                 }
 
+                @Suppress("UNCHECKED_CAST")
                 val array = stack.peek() as ArrayList<Any?>
 
                 if (array.isNotEmpty()) {
