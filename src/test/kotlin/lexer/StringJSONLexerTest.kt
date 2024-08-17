@@ -1,8 +1,8 @@
 package lexer
 
+import net.quickwrite.JSONLexerException
 import net.quickwrite.lexer.JSONLexeme
 import net.quickwrite.lexer.JSONLexemeType
-import net.quickwrite.lexer.LexerException
 import net.quickwrite.lexer.StringJSONLexer
 import org.junit.jupiter.api.Test
 
@@ -66,7 +66,7 @@ class StringJSONLexerTest {
         val inputs = arrayOf("1.", "001", "0e", "1e+")
 
         inputs.forEach {
-            org.junit.jupiter.api.assertThrows<LexerException> {
+            org.junit.jupiter.api.assertThrows<JSONLexerException> {
                 StringJSONLexer(it).getNext()
             }
         }
