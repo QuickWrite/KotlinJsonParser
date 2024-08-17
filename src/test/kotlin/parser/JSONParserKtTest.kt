@@ -1,6 +1,6 @@
 package parser
 
-import net.quickwrite.parser.jsonParse
+import net.quickwrite.jsonParse
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*

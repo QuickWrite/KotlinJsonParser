@@ -1,4 +1,4 @@
-package net.quickwrite.parser
+package net.quickwrite
 
 import net.quickwrite.lexer.JSONLexeme
 import net.quickwrite.lexer.JSONLexemeType.*
@@ -47,7 +47,7 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> error("Unreachable")
-                    else -> throw ParserException("Invalid Token") // TODO: Better error reporting
+                    else -> throw JSONParserException("Invalid Token") // TODO: Better error reporting
                 }
                 break
             }
@@ -79,14 +79,14 @@ fun jsonParse(input: String): Any? {
 
                 if(map.isNotEmpty()) {
                     if (token.type != COMMA) {
-                        throw ParserException("Expected a ',' or a '}', but got ${token.type}") // TODO: Better error reporting
+                        throw JSONParserException("Expected a ',' or a '}', but got ${token.type}") // TODO: Better error reporting
                     }
 
                     token = lexer.getNext()
                 }
 
                 if (token.type != STRING) {
-                    throw ParserException("Expected an entry or a '}', but got ${token.type}") // TODO: Better error reporting
+                    throw JSONParserException("Expected an entry or a '}', but got ${token.type}") // TODO: Better error reporting
                 }
 
                 val identifier = token.content!!
@@ -94,7 +94,7 @@ fun jsonParse(input: String): Any? {
                 token = lexer.getNext()
 
                 if (token.type != COLON) {
-                    throw ParserException("Expeced ':' (COLON), but got ${token.type}") // TODO: Better error reporting
+                    throw JSONParserException("Expeced ':' (COLON), but got ${token.type}") // TODO: Better error reporting
                 }
 
                 token = lexer.getNext()
@@ -118,7 +118,7 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> break
-                    else -> throw ParserException("Invalid Token") // TODO: Better error reporting
+                    else -> throw JSONParserException("Invalid Token") // TODO: Better error reporting
                 }
             }
             State.ARRAY -> {
@@ -149,7 +149,7 @@ fun jsonParse(input: String): Any? {
 
                 if (array.isNotEmpty()) {
                     if (token.type != COMMA) {
-                        throw ParserException("Expected a ',' or a ']', but got ${token.type}") // TODO: Better error reporting
+                        throw JSONParserException("Expected a ',' or a ']', but got ${token.type}") // TODO: Better error reporting
                     }
 
                     token = lexer.getNext()
@@ -172,26 +172,26 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> break
-                    else -> throw ParserException("Invalid Token") // TODO: Better error reporting
+                    else -> throw JSONParserException("Invalid Token") // TODO: Better error reporting
                 }
             }
         }
     }
 
     if (stack.empty()) {
-        throw ParserException("JSON cannot be empty")
+        throw JSONParserException("JSON cannot be empty")
     }
 
     // Too much JSON
     if (lexer.getNext().type != EOF) {
-        throw ParserException("Invalid JSON") // TODO: Better error handling
+        throw JSONParserException("Invalid JSON") // TODO: Better error handling
     }
 
     val result = stack.pop()
 
     // Too little JSON
     if (!stack.empty()) {
-        throw ParserException("Invalid JSON") // TODO: Better error handling
+        throw JSONParserException("Invalid JSON") // TODO: Better error handling
     }
 
     return result

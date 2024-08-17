@@ -1,5 +1,7 @@
 package net.quickwrite.lexer
 
+import net.quickwrite.JSONLexerException
+
 class StringJSONLexer(private val content: CharSequence) : JSONLexer {
     private var position = 0
 
@@ -26,14 +28,14 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             't' -> parseLiteral("true", JSONLexemeType.TRUE)
             'f' -> parseLiteral("false", JSONLexemeType.FALSE)
             'n' -> parseLiteral("null", JSONLexemeType.NULL)
-            else -> throw LexerException("Invalid token")
+            else -> throw JSONLexerException("Invalid token")
         }
     }
 
     private fun parseLiteral(input: String, type: JSONLexemeType): JSONLexeme {
         for (i in input) {
             if(content.getChar(position) != i) {
-                throw LexerException("Expected '$input', but got malformed input")
+                throw JSONLexerException("Expected '$input', but got malformed input")
             }
             position++
         }
@@ -63,7 +65,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                     'r' -> '\r'
                     't' -> '\t'
                     'u' -> parseUDigitNumber()
-                    else -> throw LexerException("The character $char cannot be escaped") // TODO: Better error handling
+                    else -> throw JSONLexerException("The character $char cannot be escaped") // TODO: Better error handling
                 })
                 position++
                 continue
@@ -74,7 +76,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
         }
 
         if (position >= content.length) {
-            throw LexerException("String wasn't terminated") // TODO: Better error handling
+            throw JSONLexerException("String wasn't terminated") // TODO: Better error handling
         }
 
         position++
@@ -107,7 +109,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                 continue
             }
 
-            throw LexerException("An invalid hex digit has been provided. Expected 0-9A-Fa-f, but got '$char'") // TODO: Better error handling
+            throw JSONLexerException("An invalid hex digit has been provided. Expected 0-9A-Fa-f, but got '$char'") // TODO: Better error handling
         }
 
         return number.toChar()
@@ -123,7 +125,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             val start = position
             parseNumber()
             if (start == position)
-                throw LexerException("Trailing dot is not allowed") // TODO: Better error handling
+                throw JSONLexerException("Trailing dot is not allowed") // TODO: Better error handling
         }
 
         if (content.getChar(position) == 'e' || content.getChar(position) == 'E') {
@@ -135,7 +137,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             val start = position
             parseNumber()
             if (start == position)
-                throw LexerException("Trailing '${content.getChar(position)}' is not allowed") // TODO: Better error handling
+                throw JSONLexerException("Trailing '${content.getChar(position)}' is not allowed") // TODO: Better error handling
         }
 
         return JSONLexeme(JSONLexemeType.NUMBER, content.substring(if(negative) start - 1 else start, position))
@@ -151,7 +153,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             position++
 
             if (content.getChar(position) in '0' .. '9') {
-                throw LexerException("A number cannot start with a zero") // TODO: Better error handling
+                throw JSONLexerException("A number cannot start with a zero") // TODO: Better error handling
             }
             return
         }
