@@ -128,10 +128,13 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
 
         if (content.getChar(position) == '.') {
             position++
-            val start = position
+            val pStart = position
             parseNumber()
-            if (start == position)
-                throw JSONLexerException("Trailing dot is not allowed", getPosition(position - 1)) // TODO: Better error handling
+            if (pStart == position)
+                throw JSONLexerException(
+                    "Trailing dot is not allowed",
+                    getPosition(start,  position - start)
+                ) // TODO: Better error handling
         }
 
         if (content.getChar(position) == 'e' || content.getChar(position) == 'E') {
@@ -140,10 +143,13 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             if (content.getChar(position) == '-' || content.getChar(position) == '+')
                 position++
 
-            val start = position
+            val pStart = position
             parseNumber()
-            if (start == position)
-                throw JSONLexerException("Trailing '${content.getChar(position)}' is not allowed", getPosition(start, position - start)) // TODO: Better error handling
+            if (pStart == position)
+                throw JSONLexerException(
+                    "Trailing '${content.getChar(position - 1)}' is not allowed",
+                    getPosition(start,  position - start)
+                ) // TODO: Better error handling
         }
 
         return JSONLexeme(
