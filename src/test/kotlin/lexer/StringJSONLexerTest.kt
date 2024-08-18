@@ -14,7 +14,7 @@ class StringJSONLexerTest {
         val emptyStrings = mutableListOf("", " ", "\t", "\n", "\r\n")
 
         emptyStrings.forEach {
-            assertEquals(StringJSONLexer(it).getNext(), JSONLexeme(JSONLexemeType.EOF))
+            assertEquals(StringJSONLexer(it).getNext().type, JSONLexemeType.EOF)
         }
     }
 
@@ -53,11 +53,11 @@ class StringJSONLexerTest {
         val inputs = arrayOf("42", "1.5", "0.512", "1e5", "0e5", "1E5", "123456789")
 
         inputs.forEach {
-            assertEquals(JSONLexeme(JSONLexemeType.NUMBER, it), StringJSONLexer(it).getNext())
+            assertEquals(JSONLexeme(JSONLexemeType.NUMBER, 0, it.length, it), StringJSONLexer(it).getNext())
 
             // Add padding
-            assertEquals(JSONLexeme(JSONLexemeType.NUMBER, it), StringJSONLexer(" \t$it").getNext())
-            assertEquals(JSONLexeme(JSONLexemeType.NUMBER, it), StringJSONLexer(" \t$it\t ").getNext())
+            assertEquals(JSONLexeme(JSONLexemeType.NUMBER, 2, it.length, it), StringJSONLexer(" \t$it").getNext())
+            assertEquals(JSONLexeme(JSONLexemeType.NUMBER, 2, it.length, it), StringJSONLexer(" \t$it\t ").getNext())
         }
     }
 
@@ -78,12 +78,12 @@ class StringJSONLexerTest {
 
         inputs.forEach {
             val lexer = StringJSONLexer(it)
-            assertEquals(JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)), lexer.getNext())
-            assertEquals(JSONLexeme(JSONLexemeType.EOF), lexer.getNext())
+            assertEquals(JSONLexeme(JSONLexemeType.STRING, 0, it.length, it.substring(1, it.length - 1)), lexer.getNext())
+            assertEquals(JSONLexemeType.EOF, lexer.getNext().type)
 
             // Add padding
-            assertEquals(JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)), StringJSONLexer(" \t$it").getNext())
-            assertEquals(JSONLexeme(JSONLexemeType.STRING, it.substring(1, it.length - 1)), StringJSONLexer(" \t$it\t ").getNext())
+            assertEquals(JSONLexeme(JSONLexemeType.STRING, 2, it.length, it.substring(1, it.length - 1)), StringJSONLexer(" \t$it").getNext())
+            assertEquals(JSONLexeme(JSONLexemeType.STRING, 2, it.length, it.substring(1, it.length - 1)), StringJSONLexer(" \t$it\t ").getNext())
         }
     }
 
@@ -92,7 +92,7 @@ class StringJSONLexerTest {
         val input = "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t \\u000A\""
 
         assertEquals(
-            JSONLexeme(JSONLexemeType.STRING, "\" \\ / \b \u000C \n \r \t \u000A"),
+            JSONLexeme(JSONLexemeType.STRING, 0, input.length, "\" \\ / \b \u000C \n \r \t \u000A"),
             StringJSONLexer(input).getNext()
         )
     }
@@ -102,8 +102,8 @@ class StringJSONLexerTest {
         val input = "true"
 
         assertEquals(
-            JSONLexeme(JSONLexemeType.TRUE),
-            StringJSONLexer(input).getNext()
+            JSONLexemeType.TRUE,
+            StringJSONLexer(input).getNext().type
         )
     }
 
@@ -112,8 +112,8 @@ class StringJSONLexerTest {
         val input = "false"
 
         assertEquals(
-            JSONLexeme(JSONLexemeType.FALSE),
-            StringJSONLexer(input).getNext()
+            JSONLexemeType.FALSE,
+            StringJSONLexer(input).getNext().type
         )
     }
 
@@ -122,8 +122,8 @@ class StringJSONLexerTest {
         val input = "null"
 
         assertEquals(
-            JSONLexeme(JSONLexemeType.NULL),
-            StringJSONLexer(input).getNext()
+            JSONLexemeType.NULL,
+            StringJSONLexer(input).getNext().type
         )
     }
 }

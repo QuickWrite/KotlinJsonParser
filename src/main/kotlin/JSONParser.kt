@@ -47,7 +47,7 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> error("Unreachable")
-                    else -> throw JSONParserException("Invalid Token") // TODO: Better error reporting
+                    else -> throw JSONParserException("Invalid Token", lexer.getPosition(token.position, token.length)) // TODO: Better error reporting
                 }
                 break
             }
@@ -82,14 +82,14 @@ fun jsonParse(input: String): Any? {
 
                 if(map.isNotEmpty()) {
                     if (token.type != COMMA) {
-                        throw JSONParserException("Expected a ',' or a '}', but got ${token.type}") // TODO: Better error reporting
+                        throw JSONParserException("Expected a ',' or a '}', but got ${token.type}", lexer.getPosition(token.position, token.length)) // TODO: Better error reporting
                     }
 
                     token = lexer.getNext()
                 }
 
                 if (token.type != STRING) {
-                    throw JSONParserException("Expected an entry or a '}', but got ${token.type}") // TODO: Better error reporting
+                    throw JSONParserException("Expected an entry or a '}', but got ${token.type}", lexer.getPosition(token.position, token.length)) // TODO: Better error reporting
                 }
 
                 val identifier = token.content!!
@@ -97,7 +97,7 @@ fun jsonParse(input: String): Any? {
                 token = lexer.getNext()
 
                 if (token.type != COLON) {
-                    throw JSONParserException("Expected ':' (COLON), but got ${token.type}") // TODO: Better error reporting
+                    throw JSONParserException("Expected ':' (COLON), but got ${token.type}", lexer.getPosition(token.position, token.length)) // TODO: Better error reporting
                 }
 
                 token = lexer.getNext()
@@ -121,7 +121,7 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> break
-                    else -> throw JSONParserException("Invalid Token") // TODO: Better error reporting
+                    else -> throw JSONParserException("Invalid Token", lexer.getPosition(token.position, token.length)) // TODO: Better error reporting
                 }
             }
             State.ARRAY -> {
@@ -155,7 +155,7 @@ fun jsonParse(input: String): Any? {
 
                 if (array.isNotEmpty()) {
                     if (token.type != COMMA) {
-                        throw JSONParserException("Expected a ',' or a ']', but got ${token.type}") // TODO: Better error reporting
+                        throw JSONParserException("Expected a ',' or a ']', but got ${token.type}", lexer.getPosition(token.position, token.length)) // TODO: Better error reporting
                     }
 
                     token = lexer.getNext()
@@ -178,26 +178,27 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> break
-                    else -> throw JSONParserException("Invalid Token") // TODO: Better error reporting
+                    else -> throw JSONParserException("Invalid Token", lexer.getPosition(token.position, token.length)) // TODO: Better error reporting
                 }
             }
         }
     }
 
     if (stack.empty()) {
-        throw JSONParserException("JSON cannot be empty")
+        throw JSONParserException("JSON cannot be empty", null)
     }
 
+    token = lexer.getNext()
     // Too much JSON
-    if (lexer.getNext().type != EOF) {
-        throw JSONParserException("Invalid JSON") // TODO: Better error handling
+    if (token.type != EOF) {
+        throw JSONParserException("Invalid JSON", lexer.getPosition(token.position, token.length)) // TODO: Better error handling
     }
 
     val result = stack.pop()
 
     // Too little JSON
     if (!stack.empty()) {
-        throw JSONParserException("Invalid JSON") // TODO: Better error handling
+        throw JSONParserException("JSON ended before it could be completely parsed", null) // TODO: Better error handling
     }
 
     return result

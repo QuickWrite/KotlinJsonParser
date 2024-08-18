@@ -9,7 +9,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
         skipWhitespace()
 
         if(position >= content.length) {
-            return JSONLexeme(JSONLexemeType.EOF)
+            return JSONLexeme(JSONLexemeType.EOF, position)
         }
 
         return when(content.getChar(position)) {
@@ -28,26 +28,27 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             't' -> parseLiteral("true", JSONLexemeType.TRUE)
             'f' -> parseLiteral("false", JSONLexemeType.FALSE)
             'n' -> parseLiteral("null", JSONLexemeType.NULL)
-            else -> throw JSONLexerException("Invalid token")
+            else -> throw JSONLexerException("Invalid token", getPosition(position))
         }
     }
 
     private fun parseLiteral(input: String, type: JSONLexemeType): JSONLexeme {
-        for (i in input) {
-            if(content.getChar(position) != i) {
-                throw JSONLexerException("Expected '$input', but got malformed input")
+        for (i in 0..< input.length) {
+            if(content.getChar(position) != input[i]) {
+                throw JSONLexerException("Expected '$input', but got malformed input", getPosition(position - i, i))
             }
             position++
         }
-        return JSONLexeme(type)
+        return JSONLexeme(type, position - input.length, input.length)
     }
 
     private fun charLexeme(type: JSONLexemeType): JSONLexeme {
         position++
-        return JSONLexeme(type)
+        return JSONLexeme(type, position - 1)
     }
 
     private fun parseString(): JSONLexeme {
+        val start = position
         position++
 
         val builder = StringBuilder()
@@ -65,7 +66,8 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                     'r' -> '\r'
                     't' -> '\t'
                     'u' -> parseUDigitNumber()
-                    else -> throw JSONLexerException("The character $char cannot be escaped") // TODO: Better error handling
+                    0.toChar() -> throw JSONLexerException("String wasn't correctly terminated", getPosition(content.length - 1))
+                    else -> throw JSONLexerException("The character $char cannot be escaped", getPosition(position - 1, 2)) // TODO: Better error handling
                 })
                 position++
                 continue
@@ -76,16 +78,17 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
         }
 
         if (position >= content.length) {
-            throw JSONLexerException("String wasn't terminated") // TODO: Better error handling
+            throw JSONLexerException("String wasn't correctly terminated", getPosition(content.length - 1)) // TODO: Better error handling
         }
 
         position++
 
-        return JSONLexeme(JSONLexemeType.STRING, builder.toString())
+        return JSONLexeme(JSONLexemeType.STRING, start, position - start, builder.toString())
     }
 
     private fun parseUDigitNumber(): Char {
         var number = 0
+        val start = position
 
         for (i in 3 downTo 0) {
             position++
@@ -109,7 +112,10 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                 continue
             }
 
-            throw JSONLexerException("An invalid hex digit has been provided. Expected 0-9A-Fa-f, but got '$char'") // TODO: Better error handling
+            throw JSONLexerException(
+                "An invalid hex digit has been provided. Expected 0-9A-Fa-f, but got '$char'",
+                getPosition(start - 1, position - start + 1)
+            ) // TODO: Better error handling
         }
 
         return number.toChar()
@@ -125,7 +131,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             val start = position
             parseNumber()
             if (start == position)
-                throw JSONLexerException("Trailing dot is not allowed") // TODO: Better error handling
+                throw JSONLexerException("Trailing dot is not allowed", getPosition(position - 1)) // TODO: Better error handling
         }
 
         if (content.getChar(position) == 'e' || content.getChar(position) == 'E') {
@@ -137,10 +143,15 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             val start = position
             parseNumber()
             if (start == position)
-                throw JSONLexerException("Trailing '${content.getChar(position)}' is not allowed") // TODO: Better error handling
+                throw JSONLexerException("Trailing '${content.getChar(position)}' is not allowed", getPosition(start, position - start)) // TODO: Better error handling
         }
 
-        return JSONLexeme(JSONLexemeType.NUMBER, content.substring(if(negative) start - 1 else start, position))
+        return JSONLexeme(
+            JSONLexemeType.NUMBER,
+            start,
+            position - start,
+            content.substring(if(negative) start - 1 else start, position)
+        )
     }
 
     private fun parseFirstPart() {
@@ -153,7 +164,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             position++
 
             if (content.getChar(position) in '0' .. '9') {
-                throw JSONLexerException("A number cannot start with a zero") // TODO: Better error handling
+                throw JSONLexerException("A number cannot start with a zero", getPosition(position - 1, 2)) // TODO: Better error handling
             }
             return
         }
@@ -170,6 +181,42 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
         while (!(position >= content.length || !Character.isWhitespace(content.getChar(position)))) {
             position++
         }
+    }
+
+    override fun getPosition(position: Int, length: Int): JSONPositionData {
+        var pos = position
+
+        while (pos - 1 >= 0 && content[pos - 1] != '\n' && content[pos - 1] != '\r') {
+            pos--
+        }
+
+        val startLine = pos
+
+        pos = position
+        while (pos < content.length && content[pos] != '\n' && content[pos] != '\r') {
+            pos++
+        }
+
+        class Position : JSONPositionData {
+            override fun lineNumber(): Int {
+                return content.slice(0..position).lines().size
+            }
+
+            override fun linePosition(): Int {
+                return position - startLine
+            }
+
+            override fun getLength(): Int {
+                return length
+            }
+
+            override fun getLine(): String {
+                return content.substring(startLine, pos)
+            }
+
+        }
+
+        return Position()
     }
 }
 
