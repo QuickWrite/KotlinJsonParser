@@ -121,6 +121,9 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> break
+                    COMMA -> throw JSONParserException("Expected a value, but got a ','", lexer.getPosition(token.position))
+                    COLON -> throw JSONParserException("Expected a value, but got a ','", lexer.getPosition(token.position))
+                    SQUARE_CLOSE -> throw JSONParserException("Object got closed too early. Expected a value, but got '}'", lexer.getPosition(token.position))
                     else -> throw JSONParserException("Invalid Token", lexer.getPosition(token.position, token.length)) // TODO: Better error reporting
                 }
             }
@@ -178,6 +181,9 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> break
+                    COMMA -> throw JSONParserException("Expected a value, but got a ','", lexer.getPosition(token.position))
+                    COLON -> throw JSONParserException("Expected a value, but got a ','", lexer.getPosition(token.position))
+                    SQUARE_CLOSE -> throw JSONParserException("List got closed too early. Expected a value, but got ']'", lexer.getPosition(token.position))
                     else -> throw JSONParserException("Invalid Token", lexer.getPosition(token.position, token.length)) // TODO: Better error reporting
                 }
             }
