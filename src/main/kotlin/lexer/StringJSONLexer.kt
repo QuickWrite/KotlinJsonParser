@@ -167,16 +167,21 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
     }
 
     private fun skipWhitespace() {
-        while (!(position >= content.length || !Character.isWhitespace(content.getChar(position)))) {
+        while (!(position >= content.length || !content.getChar(position).isWhitespace())) {
             position++
         }
     }
-}
 
-private fun CharSequence.getChar(index: Int): Char {
-    if (index >= this.length) {
-        return 0.toChar()
+    private fun CharSequence.getChar(index: Int): Char {
+        if (index >= this.length) {
+            return 0.toChar()
+        }
+
+        return this[index]
     }
 
-    return this[index]
+    private fun Char.isWhitespace(): Boolean {
+        return this == ' ' || this == '\r' || this == '\n' || this == '\t'
+    }
 }
+
