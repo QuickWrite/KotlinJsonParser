@@ -12,7 +12,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             return JSONLexeme(JSONLexemeType.EOF, position)
         }
 
-        return when(content.getChar(position)) {
+        return when(val char = content.getChar(position)) {
             '{' -> charLexeme(JSONLexemeType.CURLY_OPEN)
             '}' -> charLexeme(JSONLexemeType.CURLY_CLOSE)
             '[' -> charLexeme(JSONLexemeType.SQUARE_OPEN)
@@ -28,17 +28,35 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             't' -> parseLiteral("true", JSONLexemeType.TRUE)
             'f' -> parseLiteral("false", JSONLexemeType.FALSE)
             'n' -> parseLiteral("null", JSONLexemeType.NULL)
-            else -> throw JSONLexerException("Invalid token", getPosition(position))
+            else -> throw JSONLexerException("Did not recognize '$char' as a valid token character", getPosition(position))
         }
     }
 
     private fun parseLiteral(input: String, type: JSONLexemeType): JSONLexeme {
+        fun captureRestToken() {
+            // Try to capture the rest of the token
+            while(!content.getChar(position).isWhitespace() && content.getChar(position) != 0.toChar()) {
+                position++
+            }
+        }
+
         for (i in 0..< input.length) {
             if(content.getChar(position) != input[i]) {
-                throw JSONLexerException("Expected '$input', but got malformed input", getPosition(position - i, i))
+                val start = position - i
+                captureRestToken()
+
+                throw JSONLexerException("Expected '$input', but got malformed input", getPosition(start, position - start))
             }
             position++
         }
+
+        if (!content.getChar(position).isWhitespace() && content.getChar(position) != 0.toChar()) {
+            val start = position - input.length
+            captureRestToken()
+
+            throw JSONLexerException("Expected '$input', but got malformed input", getPosition(start, position - start))
+        }
+
         return JSONLexeme(type, position - input.length, input.length)
     }
 
