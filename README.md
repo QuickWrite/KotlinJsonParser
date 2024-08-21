@@ -9,6 +9,34 @@ This is mostly a toy project and with that less useful for normal usage. If you 
 - Built with Kotlin
 - Simple API
 
+## Parser Flow
+
+```mermaid
+---
+title: Parser Flow
+---
+
+graph LR;
+    S("Source (String)")-->L;
+    O("Source (Other)")-.- Convert -.->S;
+    O-.->LT;
+
+    subgraph LI[Lexer Interface]
+    L(String Lexer);
+    LT("File Lexer (Possible)");
+    end
+
+    LI-->P(Parser);
+    P-->D(Java Datatype)
+    
+    style Convert fill:#e1e1e1,stroke:none
+    style LT stroke:#808080,stroke-dasharray: 5 5
+    style O stroke:#808080,stroke-dasharray: 5 5
+
+```
+> [!NOTE]
+> Everything that is currently dashed is not being completely implemented and needs some extra work.
+
 ## Getting Started
 
 ### Prerequisites
