@@ -27,7 +27,7 @@ graph LR;
     end
 
     LI-->P(Parser);
-    P-->D(Java Datatype)
+    P-->D(Kotlin Datatype)
     
     style Convert fill:#e1e1e1,stroke:none
     style LT stroke:#808080,stroke-dasharray: 5 5
