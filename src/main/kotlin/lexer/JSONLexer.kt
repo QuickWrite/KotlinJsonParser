@@ -1,5 +1,8 @@
 package net.quickwrite.lexer
 
+import net.quickwrite.JSONLexerException
+import kotlin.jvm.Throws
+
 enum class JSONLexemeType
 {
     NULL,
@@ -24,6 +27,7 @@ data class JSONLexeme(
 )
 
 interface JSONLexer {
+    @Throws(JSONLexerException::class)
     fun getNext(): JSONLexeme
 
     fun getPosition(position: Int, length: Int = 1): JSONPositionData

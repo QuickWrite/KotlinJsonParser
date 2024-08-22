@@ -1,10 +1,12 @@
 package net.quickwrite.lexer
 
 import net.quickwrite.JSONLexerException
+import kotlin.jvm.Throws
 
 class StringJSONLexer(private val content: CharSequence) : JSONLexer {
     private var position = 0
 
+    @Throws(JSONLexerException::class)
     override fun getNext(): JSONLexeme {
         skipWhitespace()
 

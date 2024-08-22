@@ -5,6 +5,7 @@ import net.quickwrite.lexer.JSONLexemeType.*
 import net.quickwrite.lexer.StringJSONLexer
 import java.math.BigDecimal
 import java.util.Stack
+import kotlin.jvm.Throws
 
 private enum class State {
     START,
@@ -12,6 +13,7 @@ private enum class State {
     ARRAY,
 }
 
+@Throws(JSONParseException::class)
 fun jsonParse(input: String): Any? {
     val lexer = StringJSONLexer(input)
 
