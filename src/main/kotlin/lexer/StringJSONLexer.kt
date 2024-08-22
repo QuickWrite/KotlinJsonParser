@@ -52,7 +52,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             position++
         }
 
-        if (!content.getChar(position).isWhitespace() && content.getChar(position) != 0.toChar()) {
+        if (content.getChar(position).isLetter()) {
             val start = position - input.length
             captureRestToken()
 
