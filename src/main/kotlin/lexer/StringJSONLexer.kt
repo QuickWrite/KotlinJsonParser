@@ -87,7 +87,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                     't' -> '\t'
                     'u' -> parseUDigitNumber()
                     0.toChar() -> throw JSONLexerException("String wasn't correctly terminated", getPosition(content.length - 1))
-                    else -> throw JSONLexerException("The character $char cannot be escaped", getPosition(position - 1, 2)) // TODO: Better error handling
+                    else -> throw JSONLexerException("The character $char cannot be escaped", getPosition(position - 1, 2))
                 })
                 position++
                 continue
@@ -98,7 +98,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
         }
 
         if (position >= content.length) {
-            throw JSONLexerException("String wasn't correctly terminated", getPosition(content.length - 1)) // TODO: Better error handling
+            throw JSONLexerException("String wasn't correctly terminated", getPosition(content.length - 1))
         }
 
         position++
@@ -135,7 +135,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             throw JSONLexerException(
                 "An invalid hex digit has been provided. Expected 0-9A-Fa-f, but got '$char'",
                 getPosition(start - 1, position - start + 1)
-            ) // TODO: Better error handling
+            )
         }
 
         return number.toChar()
@@ -154,7 +154,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                 throw JSONLexerException(
                     "Trailing dot is not allowed",
                     getPosition(start,  position - start)
-                ) // TODO: Better error handling
+                )
         }
 
         if (content.getChar(position) == 'e' || content.getChar(position) == 'E') {
@@ -169,7 +169,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                 throw JSONLexerException(
                     "Trailing '${content.getChar(position - 1)}' is not allowed",
                     getPosition(start,  position - start)
-                ) // TODO: Better error handling
+                )
         }
 
         return JSONLexeme(
@@ -190,7 +190,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             position++
 
             if (content.getChar(position) in '0' .. '9') {
-                throw JSONLexerException("A number cannot start with a zero", getPosition(position - 1, 2)) // TODO: Better error handling
+                throw JSONLexerException("A number cannot start with a zero", getPosition(position - 1, 2))
             }
             return
         }
