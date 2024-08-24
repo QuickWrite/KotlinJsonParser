@@ -4,7 +4,7 @@ import net.quickwrite.JSONLexerException
 import net.quickwrite.lexer.StringJSONLexer
 import org.junit.jupiter.api.Test
 
-class StringJSONLexerExceptions {
+class StringJSONLexerExceptionsTest {
     @Test
     fun `number exception test`() {
         val inputs = arrayOf("1.", "001", "0e", "1e+")
