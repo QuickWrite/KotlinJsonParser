@@ -23,7 +23,7 @@ graph LR;
 
     subgraph LI[Lexer Interface]
     L(String Lexer);
-    LT("File Lexer (Possible)");
+    LT("(Source) Lexer");
     end
 
     LI-->P(Parser);
