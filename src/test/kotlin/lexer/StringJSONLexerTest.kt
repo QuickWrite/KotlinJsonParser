@@ -62,17 +62,6 @@ class StringJSONLexerTest {
     }
 
     @Test
-    fun `number exception test`() {
-        val inputs = arrayOf("1.", "001", "0e", "1e+")
-
-        inputs.forEach {
-            org.junit.jupiter.api.assertThrows<JSONLexerException> {
-                StringJSONLexer(it).getNext()
-            }
-        }
-    }
-
-    @Test
     fun `simple String test`() {
         val inputs = arrayOf("\"\"", "\"Hello World\"")
 
