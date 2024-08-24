@@ -2,6 +2,7 @@ package net.quickwrite
 
 import net.quickwrite.lexer.JSONLexeme
 import net.quickwrite.lexer.JSONLexemeType.*
+import net.quickwrite.lexer.JSONLexer
 import net.quickwrite.lexer.StringJSONLexer
 import java.math.BigDecimal
 import java.util.Stack
@@ -14,10 +15,8 @@ private enum class State {
 }
 
 @Throws(JSONParseException::class)
-fun jsonParse(input: String): Any? {
-    val lexer = StringJSONLexer(input)
-
-    var state = State.START
+fun jsonParse(lexer: JSONLexer): Any? {
+    var state = State.START;
 
     var token: JSONLexeme
 
@@ -210,4 +209,9 @@ fun jsonParse(input: String): Any? {
     }
 
     return result
+}
+
+@Throws(JSONParseException::class)
+fun jsonParse(input: String): Any? {
+    return jsonParse(StringJSONLexer(input))
 }
