@@ -5,6 +5,7 @@ import net.quickwrite.lexer.JSONLexemeType.*
 import net.quickwrite.lexer.StringJSONLexer
 import java.math.BigDecimal
 import java.util.Stack
+import kotlin.jvm.Throws
 
 private enum class State {
     START,
@@ -12,6 +13,7 @@ private enum class State {
     ARRAY,
 }
 
+@Throws(JSONParseException::class)
 fun jsonParse(input: String): Any? {
     val lexer = StringJSONLexer(input)
 
@@ -47,7 +49,7 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> error("Unreachable")
-                    else -> throw JSONParserException("Invalid Token") // TODO: Better error reporting
+                    else -> throw JSONParserException("Invalid Token", lexer.getPosition(token.position, token.length))
                 }
                 break
             }
@@ -82,14 +84,14 @@ fun jsonParse(input: String): Any? {
 
                 if(map.isNotEmpty()) {
                     if (token.type != COMMA) {
-                        throw JSONParserException("Expected a ',' or a '}', but got ${token.type}") // TODO: Better error reporting
+                        throw JSONParserException("Expected a ',' or a '}', but got ${token.type}", lexer.getPosition(token.position, token.length))
                     }
 
                     token = lexer.getNext()
                 }
 
                 if (token.type != STRING) {
-                    throw JSONParserException("Expected an entry or a '}', but got ${token.type}") // TODO: Better error reporting
+                    throw JSONParserException("Expected an entry or a '}', but got ${token.type}", lexer.getPosition(token.position, token.length))
                 }
 
                 val identifier = token.content!!
@@ -97,7 +99,7 @@ fun jsonParse(input: String): Any? {
                 token = lexer.getNext()
 
                 if (token.type != COLON) {
-                    throw JSONParserException("Expected ':' (COLON), but got ${token.type}") // TODO: Better error reporting
+                    throw JSONParserException("Expected ':' (COLON), but got ${token.type}", lexer.getPosition(token.position, token.length))
                 }
 
                 token = lexer.getNext()
@@ -121,7 +123,10 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> break
-                    else -> throw JSONParserException("Invalid Token") // TODO: Better error reporting
+                    COMMA -> throw JSONParserException("Expected a value, but got a ','", lexer.getPosition(token.position))
+                    COLON -> throw JSONParserException("Expected a value, but got a ','", lexer.getPosition(token.position))
+                    SQUARE_CLOSE -> throw JSONParserException("Object got closed too early. Expected a value, but got '}'", lexer.getPosition(token.position))
+                    else -> throw JSONParserException("Invalid Token", lexer.getPosition(token.position, token.length))
                 }
             }
             State.ARRAY -> {
@@ -155,7 +160,7 @@ fun jsonParse(input: String): Any? {
 
                 if (array.isNotEmpty()) {
                     if (token.type != COMMA) {
-                        throw JSONParserException("Expected a ',' or a ']', but got ${token.type}") // TODO: Better error reporting
+                        throw JSONParserException("Expected a ',' or a ']', but got ${token.type}", lexer.getPosition(token.position, token.length))
                     }
 
                     token = lexer.getNext()
@@ -178,26 +183,30 @@ fun jsonParse(input: String): Any? {
                         continue
                     }
                     EOF -> break
-                    else -> throw JSONParserException("Invalid Token") // TODO: Better error reporting
+                    COMMA -> throw JSONParserException("Expected a value, but got a ','", lexer.getPosition(token.position))
+                    COLON -> throw JSONParserException("Expected a value, but got a ','", lexer.getPosition(token.position))
+                    SQUARE_CLOSE -> throw JSONParserException("List got closed too early. Expected a value, but got ']'", lexer.getPosition(token.position))
+                    else -> throw JSONParserException("Invalid Token", lexer.getPosition(token.position, token.length))
                 }
             }
         }
     }
 
     if (stack.empty()) {
-        throw JSONParserException("JSON cannot be empty")
+        throw JSONParserException("JSON cannot be empty", null)
     }
 
+    token = lexer.getNext()
     // Too much JSON
-    if (lexer.getNext().type != EOF) {
-        throw JSONParserException("Invalid JSON") // TODO: Better error handling
+    if (token.type != EOF) {
+        throw JSONParserException("Invalid JSON", lexer.getPosition(token.position, token.length))
     }
 
     val result = stack.pop()
 
     // Too little JSON
     if (!stack.empty()) {
-        throw JSONParserException("Invalid JSON") // TODO: Better error handling
+        throw JSONParserException("JSON ended before it could be completely parsed", null)
     }
 
     return result

@@ -1,18 +1,20 @@
 package net.quickwrite.lexer
 
 import net.quickwrite.JSONLexerException
+import kotlin.jvm.Throws
 
 class StringJSONLexer(private val content: CharSequence) : JSONLexer {
     private var position = 0
 
+    @Throws(JSONLexerException::class)
     override fun getNext(): JSONLexeme {
         skipWhitespace()
 
         if(position >= content.length) {
-            return JSONLexeme(JSONLexemeType.EOF)
+            return JSONLexeme(JSONLexemeType.EOF, position)
         }
 
-        return when(content.getChar(position)) {
+        return when(val char = content.getChar(position)) {
             '{' -> charLexeme(JSONLexemeType.CURLY_OPEN)
             '}' -> charLexeme(JSONLexemeType.CURLY_CLOSE)
             '[' -> charLexeme(JSONLexemeType.SQUARE_OPEN)
@@ -28,26 +30,45 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             't' -> parseLiteral("true", JSONLexemeType.TRUE)
             'f' -> parseLiteral("false", JSONLexemeType.FALSE)
             'n' -> parseLiteral("null", JSONLexemeType.NULL)
-            else -> throw JSONLexerException("Invalid token")
+            else -> throw JSONLexerException("Did not recognize '$char' as a valid token character", getPosition(position))
         }
     }
 
     private fun parseLiteral(input: String, type: JSONLexemeType): JSONLexeme {
-        for (i in input) {
-            if(content.getChar(position) != i) {
-                throw JSONLexerException("Expected '$input', but got malformed input")
+        fun captureRestToken() {
+            // Try to capture the rest of the token
+            while(!content.getChar(position).isWhitespace() && content.getChar(position) != 0.toChar()) {
+                position++
+            }
+        }
+
+        for (i in 0..< input.length) {
+            if(content.getChar(position) != input[i]) {
+                val start = position - i
+                captureRestToken()
+
+                throw JSONLexerException("Expected '$input', but got malformed input", getPosition(start, position - start))
             }
             position++
         }
-        return JSONLexeme(type)
+
+        if (content.getChar(position).isLetter()) {
+            val start = position - input.length
+            captureRestToken()
+
+            throw JSONLexerException("Expected '$input', but got malformed input", getPosition(start, position - start))
+        }
+
+        return JSONLexeme(type, position - input.length, input.length)
     }
 
     private fun charLexeme(type: JSONLexemeType): JSONLexeme {
         position++
-        return JSONLexeme(type)
+        return JSONLexeme(type, position - 1)
     }
 
     private fun parseString(): JSONLexeme {
+        val start = position
         position++
 
         val builder = StringBuilder()
@@ -65,7 +86,8 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                     'r' -> '\r'
                     't' -> '\t'
                     'u' -> parseUDigitNumber()
-                    else -> throw JSONLexerException("The character $char cannot be escaped") // TODO: Better error handling
+                    0.toChar() -> throw JSONLexerException("String wasn't correctly terminated", getPosition(content.length - 1))
+                    else -> throw JSONLexerException("The character $char cannot be escaped", getPosition(position - 1, 2))
                 })
                 position++
                 continue
@@ -76,16 +98,17 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
         }
 
         if (position >= content.length) {
-            throw JSONLexerException("String wasn't terminated") // TODO: Better error handling
+            throw JSONLexerException("String wasn't correctly terminated", getPosition(content.length - 1))
         }
 
         position++
 
-        return JSONLexeme(JSONLexemeType.STRING, builder.toString())
+        return JSONLexeme(JSONLexemeType.STRING, start, position - start, builder.toString())
     }
 
     private fun parseUDigitNumber(): Char {
         var number = 0
+        val start = position
 
         for (i in 3 downTo 0) {
             position++
@@ -109,7 +132,10 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                 continue
             }
 
-            throw JSONLexerException("An invalid hex digit has been provided. Expected 0-9A-Fa-f, but got '$char'") // TODO: Better error handling
+            throw JSONLexerException(
+                "An invalid hex digit has been provided. Expected 0-9A-Fa-f, but got '$char'",
+                getPosition(start - 1, position - start + 1)
+            )
         }
 
         return number.toChar()
@@ -122,10 +148,13 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
 
         if (content.getChar(position) == '.') {
             position++
-            val start = position
+            val pStart = position
             parseNumber()
-            if (start == position)
-                throw JSONLexerException("Trailing dot is not allowed") // TODO: Better error handling
+            if (pStart == position)
+                throw JSONLexerException(
+                    "Trailing dot is not allowed",
+                    getPosition(start,  position - start)
+                )
         }
 
         if (content.getChar(position) == 'e' || content.getChar(position) == 'E') {
@@ -134,13 +163,21 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             if (content.getChar(position) == '-' || content.getChar(position) == '+')
                 position++
 
-            val start = position
+            val pStart = position
             parseNumber()
-            if (start == position)
-                throw JSONLexerException("Trailing '${content.getChar(position)}' is not allowed") // TODO: Better error handling
+            if (pStart == position)
+                throw JSONLexerException(
+                    "Trailing '${content.getChar(position - 1)}' is not allowed",
+                    getPosition(start,  position - start)
+                )
         }
 
-        return JSONLexeme(JSONLexemeType.NUMBER, content.substring(if(negative) start - 1 else start, position))
+        return JSONLexeme(
+            JSONLexemeType.NUMBER,
+            start,
+            position - start,
+            content.substring(if(negative) start - 1 else start, position)
+        )
     }
 
     private fun parseFirstPart() {
@@ -153,7 +190,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             position++
 
             if (content.getChar(position) in '0' .. '9') {
-                throw JSONLexerException("A number cannot start with a zero") // TODO: Better error handling
+                throw JSONLexerException("A number cannot start with a zero", getPosition(position - 1, 2))
             }
             return
         }
@@ -172,6 +209,42 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
         }
     }
 
+    override fun getPosition(position: Int, length: Int): JSONPositionData {
+        var pos = position
+
+        while (pos - 1 >= 0 && content[pos - 1] != '\n' && content[pos - 1] != '\r') {
+            pos--
+        }
+
+        val startLine = pos
+
+        pos = position
+        while (pos < content.length && content[pos] != '\n' && content[pos] != '\r') {
+            pos++
+        }
+
+        class Position : JSONPositionData {
+            override fun lineNumber(): Int {
+                return content.slice(0..position).lines().size
+            }
+
+            override fun linePosition(): Int {
+                return position - startLine
+            }
+
+            override fun getLength(): Int {
+                return length
+            }
+
+            override fun getLine(): String {
+                return content.substring(startLine, pos)
+            }
+
+        }
+
+        return Position()
+    }
+
     private fun CharSequence.getChar(index: Int): Char {
         if (index >= this.length) {
             return 0.toChar()
@@ -183,5 +256,5 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
     private fun Char.isWhitespace(): Boolean {
         return this == ' ' || this == '\r' || this == '\n' || this == '\t'
     }
+    return this[index]
 }
-
