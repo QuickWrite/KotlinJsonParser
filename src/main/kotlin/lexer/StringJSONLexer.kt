@@ -256,5 +256,4 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
     private fun Char.isWhitespace(): Boolean {
         return this == ' ' || this == '\r' || this == '\n' || this == '\t'
     }
-    return this[index]
 }
