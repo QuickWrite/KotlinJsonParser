@@ -14,6 +14,33 @@ private enum class State {
     ARRAY,
 }
 
+/**
+ * Parses JSON tokens from a [JSONLexer] into a Kotlin Object.
+ * The JSON will be parsed according to:
+ * [RFC 8259 - The JavaScript Object Notation (JSON) Data Interchange Format](https://www.rfc-editor.org/rfc/rfc8259).
+ *
+ * ## Resulting value
+ * The resulting value can be (depending on the JSON input) recursively:
+ * - Boolean
+ * - Null
+ * - Number (as a [BigDecimal])
+ * - String
+ * - Array (as an [ArrayList] with [Any])
+ * - Object (as a [HashMap] with [String] to [Any])
+ *
+ * This value is a single object and can be used however wanted without any other abstractions.
+ *
+ * ## Error handling
+ * If an error happens at the parsing stage, a [JSONParserException] is being thrown.
+ *
+ * If the lexer is experiencing an error the [JSONLexerException] will be thrown by the lexer
+ * and with that this function as well.
+ *
+ * Both exception types are based upon the [JSONParseException] and with that can both be caught at the same time.
+ *
+ * @param lexer The lexer which is being used for the tokens
+ * @return The resulting JSON value
+ */
 @Throws(JSONParseException::class)
 fun jsonParse(lexer: JSONLexer): Any? {
     var state = State.START;
@@ -211,6 +238,36 @@ fun jsonParse(lexer: JSONLexer): Any? {
     return result
 }
 
+/**
+ * Parses a JSON string into a Kotlin Object.
+ * The JSON will be parsed according to:
+ * [RFC 8259 - The JavaScript Object Notation (JSON) Data Interchange Format](https://www.rfc-editor.org/rfc/rfc8259).
+ *
+ * This function is an abstraction of the [jsonParse] function and uses a [StringJSONLexer] which is initialized with
+ * the `input` string and passed to the actual function.
+ *
+ * ## Resulting value
+ * The resulting value can be (depending on the JSON input) recursively:
+ * - Boolean
+ * - Null
+ * - Number (as a [BigDecimal])
+ * - String
+ * - Array (as an [ArrayList] with [Any])
+ * - Object (as a [HashMap] with [String] to [Any])
+ *
+ * This value is a single object and can be used however wanted without any other abstractions.
+ *
+ * ## Error handling
+ * If an error happens at the parsing stage, a [JSONParserException] is being thrown.
+ *
+ * If the lexer is experiencing an error the [JSONLexerException] will be thrown by the lexer
+ * and with that this function as well.
+ *
+ * Both exception types are based upon the [JSONParseException] and with that can both be caught at the same time.
+ *
+ * @param input The input string which is being parsed
+ * @return The resulting JSON value
+ */
 @Throws(JSONParseException::class)
 fun jsonParse(input: String): Any? {
     return jsonParse(StringJSONLexer(input))
