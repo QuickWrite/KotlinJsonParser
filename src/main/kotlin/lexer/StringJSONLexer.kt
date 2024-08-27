@@ -229,7 +229,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             }
 
             override fun linePosition(): Int {
-                return position - startLine
+                return position - startLine + 1
             }
 
             override fun getLength(): Int {

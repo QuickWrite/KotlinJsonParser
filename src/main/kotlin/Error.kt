@@ -17,7 +17,7 @@ abstract class JSONParseException(message: String, private val position: JSONPos
         return """
             error: $lineNumber:$linePosition $message
             $lineNumber | $line
-            ${" ".repeat(lineNumber.length)} | ${" ".repeat(linePosition)}${"^".repeat(length)}
+            ${" ".repeat(lineNumber.length)} | ${" ".repeat(linePosition - 1)}${"^".repeat(length)}
         """.trimIndent()
     }
 }
