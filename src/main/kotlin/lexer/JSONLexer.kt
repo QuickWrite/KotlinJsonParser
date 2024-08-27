@@ -85,9 +85,87 @@ interface JSONLexer {
     fun getPosition(position: Int, length: Int = 1): JSONPositionData
 }
 
+/**
+ * The interface for specific position data for error handling.
+ * It allows the exceptions to have more information on where
+ * the error was and what happened.
+ *
+ * This exists so that the tokens themselves do not have to
+ * store this information, as it is very expensive to calculate,
+ * and if everything is fine, it does not have to be used,
+ * and with that is completely useless.
+ */
 interface JSONPositionData {
+    /**
+     * Returns the exact line number where the error happened.
+     * It **must** be `1`-Based as this is a number that is
+     * for the user and not the computer.
+     *
+     * So for example if the error happened in this document:
+     * ```json
+     * {
+     *     "test": 42,
+     *     "me": error
+     * }
+     * ```
+     * then the function should return the value `3` as the error is
+     * in the third line of the document.
+     */
     fun lineNumber(): Int
+
+    /**
+     * Returns the starting position of the error in the line.
+     * It **must** be `1`-based as this is a number that
+     * for the user and not the computer.
+     *
+     * So for example if the error happened in this document:
+     * ```json
+     * {
+     *     "test": 42,
+     *     "me": error
+     * }
+     * ```
+     * then the function should return the value `11` as the error
+     * is starting at the eleventh character on that line
+     * (whitespace is being included).
+     */
     fun linePosition(): Int
+
+    /**
+     * Returns the length of the error that happened.
+     *
+     * If it is just one character that was the erroneous character
+     * then the value would be `1`.
+     * So if the document would be `{:}` then the `:` would throw
+     * an error that is one character long.
+     *
+     * And if the erroneous token is longer then the length will
+     * be according to the length of the token:
+     *
+     * Example document:
+     * ```json
+     * {
+     *     "test": 42,
+     *     "me": truw
+     * }
+     * ```
+     * In this case the returned value would be `4` as the
+     * literal `truw` is four characters long.
+     */
     fun getLength(): Int
+
+    /**
+     * Returns the entire line in string form.
+     *
+     * So for example if the error happened in this document:
+     * ```json
+     * {
+     *     "test": 42,
+     *     "me": error
+     * }
+     * ```
+     * then the return value would be `    "me": error`
+     * (with the whitespace at the beginning).
+     */
     fun getLine(): String
 }
