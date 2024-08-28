@@ -42,7 +42,7 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             }
         }
 
-        for (i in 0..< input.length) {
+        for (i in input.indices) {
             if(content.getChar(position) != input[i]) {
                 val start = position - i
                 captureRestToken()
