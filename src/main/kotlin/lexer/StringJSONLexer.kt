@@ -1,6 +1,7 @@
 package net.quickwrite.lexer
 
 import net.quickwrite.JSONLexerException
+import java.util.*
 import kotlin.jvm.Throws
 
 class StringJSONLexer(private val content: CharSequence) : JSONLexer {
@@ -93,6 +94,16 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
                 continue
             }
 
+            if(content[position].code in 0x0000..0x001F) {
+                val hex = content[position].toHex()
+
+                throw JSONLexerException(
+                    "The character '$hex' cannot be in a string. " +
+                    "If this character should be in the string, then it should be escaped using '$hex'.",
+                    getPosition(position)
+                )
+            }
+
             builder.append(content[position])
             position++
         }
@@ -101,9 +112,31 @@ class StringJSONLexer(private val content: CharSequence) : JSONLexer {
             throw JSONLexerException("String wasn't correctly terminated", getPosition(content.length - 1))
         }
 
+        if(content[position].code == 0) {
+            throw JSONLexerException(
+                "The character '\\u0000' (Null character) cannot be in a string as it terminates it immediately. " +
+                "If this character should be in the string, then it should be escaped using '\\u0000'.",
+                getPosition(position)
+            )
+        }
+
         position++
 
         return JSONLexeme(JSONLexemeType.STRING, start, position - start, builder.toString())
+    }
+
+    private fun Char.toHex(): String {
+        return when(this) {
+            '\b' -> "\\b"
+            '\u000C' -> "\\f"
+            '\n' -> "\\n"
+            '\r' -> "\\r"
+            '\t' -> "\\t"
+            else -> {
+                val value = Integer.toHexString(this.code).uppercase(Locale.getDefault())
+                "\\u" + "0".repeat(4 - value.length) + value
+            }
+        }
     }
 
     private fun parseUDigitNumber(): Char {

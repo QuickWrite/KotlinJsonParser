@@ -66,4 +66,19 @@ class StringJSONLexerExceptionsTest {
             }
         }
     }
+
+    @Test
+    fun `string control characters test`() {
+        val inputs = arrayOfNulls<String>(0x001F)
+
+        for (i in inputs.indices) {
+            inputs[i] = "\"${i.toChar()}\""
+        }
+
+        inputs.forEach {
+            org.junit.jupiter.api.assertThrows<JSONLexerException> {
+                StringJSONLexer(it!!).getNext()
+            }
+        }
+    }
 }
