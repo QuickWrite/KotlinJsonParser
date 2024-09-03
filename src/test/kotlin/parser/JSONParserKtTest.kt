@@ -57,6 +57,15 @@ class JSONParserKtTest {
     }
 
     @Test
+    fun `empty object test`() {
+        val input = "{}"
+
+        val result = HashMap<String, Any?>()
+
+        assertEquals(result.toString(), jsonParse(input).toString()) // toString as the equals method is not completely implemented
+    }
+
+    @Test
     fun `array test`() {
         val input = """
             [1, 2, 3, "foo", "bar", null]
@@ -69,6 +78,15 @@ class JSONParserKtTest {
         result.add("foo")
         result.add("bar")
         result.add(null)
+
+        assertEquals(result.toString(), jsonParse(input).toString())
+    }
+
+    @Test
+    fun `empty array test`() {
+        val input = "[]"
+
+        val result = ArrayList<Any?>()
 
         assertEquals(result.toString(), jsonParse(input).toString())
     }
