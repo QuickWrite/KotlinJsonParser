@@ -86,5 +86,10 @@ The `jsonParse` function returns these Datatypes:
 - List
 - Map
 
+## More information
+If you want to know more about the project and how it works, check out the [wiki](https://github.com/QuickWrite/KotlinJsonParser/wiki).
+
+Or otherwise just check out the source code. :smile:
+
 ## License
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
